@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Smartphone
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Today
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
@@ -129,19 +130,31 @@ fun DashboardScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp)
         ) {
-            // App Header: Minimalist Title
+            // App Header: Minimalist Title with Timer Logo Badge
             item {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(top = 8.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(10.dp)
-                            .clip(CircleShape)
-                            .background(BlueLight)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = BlueContainer.copy(alpha = 0.5f),
+                        border = BorderStroke(1.dp, BlueLight.copy(alpha = 0.35f)),
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Timer,
+                                contentDescription = "Screen Time Logo",
+                                tint = BlueLight,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         text = "Screen Time",
                         style = MaterialTheme.typography.headlineMedium,
