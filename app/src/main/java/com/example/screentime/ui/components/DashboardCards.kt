@@ -63,43 +63,46 @@ fun DateNavigationBar(
     Surface(
         color = DarkSurface,
         border = BorderStroke(1.dp, DarkBorder),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(10.dp),
         modifier = modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 6.dp),
+                .padding(horizontal = 6.dp, vertical = 2.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            IconButton(onClick = onPreviousDay) {
+            IconButton(
+                onClick = onPreviousDay,
+                modifier = Modifier.size(32.dp)
+            ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Previous Day",
                     tint = TextSecondary,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(16.dp)
                 )
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = formattedDate,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
                 if (!isToday) {
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Surface(
                         color = BlueContainer,
-                        shape = RoundedCornerShape(6.dp),
-                        modifier = Modifier.clip(RoundedCornerShape(6.dp))
+                        shape = RoundedCornerShape(4.dp),
+                        modifier = Modifier.clip(RoundedCornerShape(4.dp))
                     ) {
                         TextButton(
                             onClick = onToday,
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                            modifier = Modifier.height(26.dp)
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
+                            modifier = Modifier.height(22.dp)
                         ) {
                             Text(
                                 text = "Today",
@@ -114,13 +117,14 @@ fun DateNavigationBar(
 
             IconButton(
                 onClick = onNextDay,
-                enabled = isNextEnabled
+                enabled = isNextEnabled,
+                modifier = Modifier.size(32.dp)
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = "Next Day",
                     tint = if (isNextEnabled) TextSecondary else TextMuted.copy(alpha = 0.3f),
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(16.dp)
                 )
             }
         }
