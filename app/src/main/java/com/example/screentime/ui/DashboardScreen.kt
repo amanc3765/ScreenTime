@@ -5,12 +5,12 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -32,7 +32,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -45,22 +44,16 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -71,17 +64,31 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.screentime.repository.SessionUiItem
+import com.example.screentime.ui.theme.BlueContainer
+import com.example.screentime.ui.theme.BlueLight
+import com.example.screentime.ui.theme.BluePrimary
+import com.example.screentime.ui.theme.DarkBackground
+import com.example.screentime.ui.theme.DarkBorder
+import com.example.screentime.ui.theme.DarkSurface
+import com.example.screentime.ui.theme.DarkSurfaceVariant
+import com.example.screentime.ui.theme.GreenActive
+import com.example.screentime.ui.theme.OnRedErrorContainer
+import com.example.screentime.ui.theme.RedError
+import com.example.screentime.ui.theme.RedErrorContainer
+import com.example.screentime.ui.theme.TextMuted
+import com.example.screentime.ui.theme.TextPrimary
+import com.example.screentime.ui.theme.TextSecondary
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     viewModel: ScreenTimeViewModel,
@@ -112,48 +119,50 @@ fun DashboardScreen(
     var showResetConfirmDialog by remember { mutableStateOf(false) }
 
     Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Smartphone,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Screen Time",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                },
-                actions = {
-                    TrackingToggleButton(
-                        isTracking = state.isTrackingEnabled,
-                        onToggle = { viewModel.toggleTracking() }
-                    )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
-        },
+        containerColor = DarkBackground,
         modifier = modifier
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(vertical = 12.dp)
+            contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp)
         ) {
+            // App Header: Minimalist Title
+            item {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(BlueLight)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "Screen Time",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = TextPrimary,
+                        letterSpacing = (-0.5).sp
+                    )
+                }
+            }
+
+            // Just below app name: Row with Status Chip (Left) and Buttons Together (Right)
+            item {
+                StatusAndActionsRow(
+                    isTracking = state.isTrackingEnabled,
+                    isScreenActive = state.activeSession != null,
+                    onReset = { showResetConfirmDialog = true },
+                    onToggleTracking = { viewModel.toggleTracking() }
+                )
+            }
+
             // Notification Permission Banner for Android 13+
             if (!hasNotificationPermission && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 item {
@@ -170,22 +179,13 @@ fun DashboardScreen(
                 item {
                     InterruptionBanner(
                         message = state.interruptionMessage
-                            ?: "Monitoring was interrupted. Some screen time data may be incomplete.",
+                            ?: "Monitoring was interrupted. Some session records may be incomplete.",
                         onDismiss = { viewModel.dismissInterruption() }
                     )
                 }
             }
 
-            // Tracking Status Bar
-            item {
-                TrackingStatusBar(
-                    isTracking = state.isTrackingEnabled,
-                    activeSession = state.activeSession,
-                    onToggleTracking = { viewModel.toggleTracking() }
-                )
-            }
-
-            // Date Navigation Section
+            // Date Navigation Bar
             item {
                 DateNavigationBar(
                     selectedDate = state.selectedDate,
@@ -205,49 +205,26 @@ fun DashboardScreen(
                 )
             }
 
-            // Session History Section Header
+            // Session History Header
             item {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp),
+                        .padding(top = 10.dp, bottom = 2.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = "Session History",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
                     )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "${state.daySummary?.sessions?.size ?: 0} sessions",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        FilledTonalButton(
-                            onClick = { showResetConfirmDialog = true },
-                            colors = ButtonDefaults.filledTonalButtonColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer,
-                                contentColor = MaterialTheme.colorScheme.onErrorContainer
-                            ),
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                            modifier = Modifier.height(28.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.RestartAlt,
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "Reset Day",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
+                    Text(
+                        text = "${state.daySummary?.sessions?.size ?: 0} recorded",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextMuted
+                    )
                 }
             }
 
@@ -269,7 +246,7 @@ fun DashboardScreen(
                 ) { session ->
                     SessionTableRow(session = session)
                     HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                        color = DarkBorder.copy(alpha = 0.6f),
                         thickness = 0.5.dp
                     )
                 }
@@ -284,17 +261,20 @@ fun DashboardScreen(
     if (showResetConfirmDialog) {
         val dateLabel = if (state.isToday) "today" else "the selected day (${state.selectedDate})"
         AlertDialog(
+            containerColor = DarkSurface,
+            titleContentColor = TextPrimary,
+            textContentColor = TextSecondary,
             onDismissRequest = { showResetConfirmDialog = false },
             icon = {
                 Icon(
                     imageVector = Icons.Default.RestartAlt,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
+                    tint = RedError,
                     modifier = Modifier.size(28.dp)
                 )
             },
             title = {
-                Text(text = "Reset Day Sessions?")
+                Text(text = "Reset Day Sessions?", fontWeight = FontWeight.Bold)
             },
             text = {
                 Text(text = "This will clear all recorded screen time sessions for $dateLabel. This action cannot be undone.")
@@ -306,130 +286,123 @@ fun DashboardScreen(
                         showResetConfirmDialog = false
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
+                        containerColor = RedError,
+                        contentColor = Color.White
                     )
                 ) {
-                    Text(text = "Reset", color = MaterialTheme.colorScheme.onError)
+                    Text(text = "Reset", fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showResetConfirmDialog = false }) {
-                    Text(text = "Cancel")
+                    Text(text = "Cancel", color = TextSecondary)
                 }
             }
         )
     }
 }
 
+/**
+ * Clean unified row just below app name:
+ * Status Chip with dot (Left) and Buttons Together (Right: Reset & Pause/Resume).
+ */
 @Composable
-fun TrackingToggleButton(
+fun StatusAndActionsRow(
     isTracking: Boolean,
-    onToggle: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    if (isTracking) {
-        FilledTonalButton(
-            onClick = onToggle,
-            colors = ButtonDefaults.filledTonalButtonColors(
-                containerColor = MaterialTheme.colorScheme.errorContainer,
-                contentColor = MaterialTheme.colorScheme.onErrorContainer
-            ),
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-            modifier = modifier
-        ) {
-            Icon(
-                imageVector = Icons.Default.Pause,
-                contentDescription = "Pause",
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(text = "Pause", style = MaterialTheme.typography.labelMedium)
-        }
-    } else {
-        Button(
-            onClick = onToggle,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary
-            ),
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-            modifier = modifier
-        ) {
-            Icon(
-                imageVector = Icons.Default.PlayArrow,
-                contentDescription = "Start",
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(text = "Resume", style = MaterialTheme.typography.labelMedium)
-        }
-    }
-}
-
-@Composable
-fun TrackingStatusBar(
-    isTracking: Boolean,
-    activeSession: com.example.screentime.data.model.Session?,
+    isScreenActive: Boolean,
+    onReset: () -> Unit,
     onToggleTracking: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val backgroundColor = if (isTracking) {
-        if (activeSession != null) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer
-    } else {
-        MaterialTheme.colorScheme.surfaceVariant
-    }
-
-    val contentColor = if (isTracking) {
-        if (activeSession != null) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
-    } else {
-        MaterialTheme.colorScheme.onSurfaceVariant
-    }
-
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = backgroundColor,
-            contentColor = contentColor
-        ),
-        shape = RoundedCornerShape(12.dp),
-        modifier = modifier.fillMaxWidth()
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
-            ) {
-                // Pulsing dot if screen session is currently active
-                if (isTracking && activeSession != null) {
-                    PulsingDot()
-                    Spacer(modifier = Modifier.width(10.dp))
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .size(10.dp)
-                            .clip(CircleShape)
-                            .background(if (isTracking) Color(0xFF4CAF50) else Color.Gray)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                }
+        // Status Chip with dot
+        StatusDotChip(
+            isTracking = isTracking,
+            isScreenActive = isScreenActive
+        )
 
-                Column {
+        // Buttons Together
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Reset Button (Red)
+            FilledTonalButton(
+                onClick = onReset,
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = RedErrorContainer,
+                    contentColor = OnRedErrorContainer
+                ),
+                shape = RoundedCornerShape(10.dp),
+                border = BorderStroke(1.dp, RedError.copy(alpha = 0.25f)),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                modifier = Modifier.height(34.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.RestartAlt,
+                    contentDescription = "Reset",
+                    modifier = Modifier.size(15.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "Reset",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            // Pause / Resume Button
+            if (isTracking) {
+                FilledTonalButton(
+                    onClick = onToggleTracking,
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = DarkSurfaceVariant,
+                        contentColor = TextPrimary
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, DarkBorder),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                    modifier = Modifier.height(34.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Pause,
+                        contentDescription = "Pause",
+                        tint = TextSecondary,
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = when {
-                            !isTracking -> "Tracking is Paused"
-                            activeSession != null -> "Screen is Active (Session in progress)"
-                            else -> "Tracking Active (Screen is off/idle)"
-                        },
-                        style = MaterialTheme.typography.titleSmall,
+                        text = "Pause",
+                        style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold
                     )
+                }
+            } else {
+                Button(
+                    onClick = onToggleTracking,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = BluePrimary,
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                    modifier = Modifier.height(34.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "Resume",
+                        tint = Color.White,
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = if (isTracking) "Foreground service monitoring screen state" else "Tap resume to continue recording screen time",
-                        style = MaterialTheme.typography.bodySmall
+                        text = "Resume",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
@@ -437,14 +410,70 @@ fun TrackingStatusBar(
     }
 }
 
+/**
+ * Minimalist status chip with a dot and text (Active or Paused).
+ */
 @Composable
-fun PulsingDot(modifier: Modifier = Modifier) {
+fun StatusDotChip(
+    isTracking: Boolean,
+    isScreenActive: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        color = DarkSurface,
+        shape = RoundedCornerShape(50),
+        border = BorderStroke(1.dp, DarkBorder),
+        modifier = modifier
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)
+        ) {
+            if (isTracking) {
+                if (isScreenActive) {
+                    PulsingGreenDot()
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(GreenActive)
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Active",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = GreenActive
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(TextMuted)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Paused",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = TextSecondary
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun PulsingGreenDot(modifier: Modifier = Modifier) {
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-    val color by infiniteTransition.animateColor(
-        initialValue = Color(0xFF00E676),
-        targetValue = Color(0x3300E676),
+    val dotColor by infiniteTransition.animateColor(
+        initialValue = GreenActive,
+        targetValue = GreenActive.copy(alpha = 0.25f),
         animationSpec = infiniteRepeatable(
-            animation = tween(800),
+            animation = tween(750),
             repeatMode = RepeatMode.Reverse
         ),
         label = "color"
@@ -452,9 +481,9 @@ fun PulsingDot(modifier: Modifier = Modifier) {
 
     Box(
         modifier = modifier
-            .size(12.dp)
+            .size(9.dp)
             .clip(CircleShape)
-            .background(color)
+            .background(dotColor)
     )
 }
 
@@ -478,12 +507,10 @@ fun DateNavigationBar(
         }
     }
 
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        border = CardDefaults.outlinedCardBorder(),
-        shape = RoundedCornerShape(12.dp),
+    Surface(
+        color = DarkSurface,
+        border = BorderStroke(1.dp, DarkBorder),
+        shape = RoundedCornerShape(14.dp),
         modifier = modifier.fillMaxWidth()
     ) {
         Row(
@@ -496,28 +523,38 @@ fun DateNavigationBar(
             IconButton(onClick = onPreviousDay) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Previous Day"
+                    contentDescription = "Previous Day",
+                    tint = TextSecondary,
+                    modifier = Modifier.size(18.dp)
                 )
             }
 
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = formattedDate,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
                 )
                 if (!isToday) {
-                    TextButton(
-                        onClick = onToday,
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Surface(
+                        color = BlueContainer,
+                        shape = RoundedCornerShape(6.dp),
+                        modifier = Modifier.clip(RoundedCornerShape(6.dp))
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Today,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(text = "Jump to Today", style = MaterialTheme.typography.labelSmall)
+                        TextButton(
+                            onClick = onToday,
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                            modifier = Modifier.height(26.dp)
+                        ) {
+                            Text(
+                                text = "Today",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = BlueLight
+                            )
+                        }
                     }
                 }
             }
@@ -529,11 +566,8 @@ fun DateNavigationBar(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = "Next Day",
-                    tint = if (isNextEnabled) {
-                        MaterialTheme.colorScheme.onSurface
-                    } else {
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                    }
+                    tint = if (isNextEnabled) TextSecondary else TextMuted.copy(alpha = 0.3f),
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }
@@ -548,15 +582,14 @@ fun DailySummaryCards(
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         // Total Sessions Card
-        Card(
+        Surface(
             modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            )
+            color = DarkSurface,
+            border = BorderStroke(1.dp, DarkBorder)
         ) {
             Column(
                 modifier = Modifier
@@ -564,33 +597,34 @@ fun DailySummaryCards(
                     .padding(16.dp)
             ) {
                 Text(
-                    text = "Total Sessions",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                    text = "SESSIONS",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = TextMuted,
+                    letterSpacing = 1.sp
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "$totalSessions",
+                    text = String.format(Locale.US, "%02d", totalSessions),
                     style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    fontWeight = FontWeight.ExtraBold,
+                    color = TextPrimary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "recorded today",
+                    text = "today",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    color = TextSecondary
                 )
             }
         }
 
         // Total Screen Time Card
-        Card(
+        Surface(
             modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.tertiaryContainer
-            )
+            color = DarkSurface,
+            border = BorderStroke(1.dp, BlueLight.copy(alpha = 0.2f))
         ) {
             Column(
                 modifier = Modifier
@@ -598,22 +632,25 @@ fun DailySummaryCards(
                     .padding(16.dp)
             ) {
                 Text(
-                    text = "Total Screen Time",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
+                    text = "SCREEN TIME",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = BlueLight,
+                    letterSpacing = 1.sp
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = totalScreenTime,
                     style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                    fontWeight = FontWeight.ExtraBold,
+                    fontFamily = FontFamily.Monospace,
+                    color = BlueLight
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "active usage",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
+                    color = TextSecondary
                 )
             }
         }
@@ -623,42 +660,46 @@ fun DailySummaryCards(
 @Composable
 fun SessionTableHeader(modifier: Modifier = Modifier) {
     Surface(
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-        shape = RoundedCornerShape(8.dp),
+        color = DarkSurfaceVariant.copy(alpha = 0.6f),
+        shape = RoundedCornerShape(10.dp),
+        border = BorderStroke(1.dp, DarkBorder.copy(alpha = 0.5f)),
         modifier = modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
+                .padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "#",
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = TextMuted,
                 modifier = Modifier.weight(0.12f)
             )
             Text(
-                text = "Start Time",
-                style = MaterialTheme.typography.labelMedium,
+                text = "START",
+                style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = TextMuted,
+                letterSpacing = 0.5.sp,
                 modifier = Modifier.weight(0.32f)
             )
             Text(
-                text = "End Time",
-                style = MaterialTheme.typography.labelMedium,
+                text = "END",
+                style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = TextMuted,
+                letterSpacing = 0.5.sp,
                 modifier = Modifier.weight(0.32f)
             )
             Text(
-                text = "Duration",
-                style = MaterialTheme.typography.labelMedium,
+                text = "DURATION",
+                style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = TextMuted,
+                letterSpacing = 0.5.sp,
                 textAlign = TextAlign.End,
                 modifier = Modifier.weight(0.24f)
             )
@@ -672,7 +713,7 @@ fun SessionTableRow(
     modifier: Modifier = Modifier
 ) {
     val rowBackground = if (session.isActive) {
-        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f)
+        BlueContainer.copy(alpha = 0.35f)
     } else {
         Color.Transparent
     }
@@ -684,37 +725,38 @@ fun SessionTableRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 12.dp),
+                .padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Sequential session number
+            // Sequence Number
             Text(
-                text = "#${session.sequenceNumber}",
+                text = "${session.sequenceNumber}",
                 style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Bold,
+                color = if (session.isActive) BlueLight else TextMuted,
                 modifier = Modifier.weight(0.12f)
             )
 
-            // Start time
+            // Start Time
             Text(
                 text = session.startTimeFormatted,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = TextPrimary,
                 modifier = Modifier.weight(0.32f)
             )
 
-            // End time or "In progress" badge
+            // End Time or "In progress" badge
             Box(modifier = Modifier.weight(0.32f)) {
                 if (session.isActive) {
                     Surface(
-                        color = MaterialTheme.colorScheme.primary,
-                        shape = RoundedCornerShape(4.dp)
+                        color = BlueLight.copy(alpha = 0.15f),
+                        shape = RoundedCornerShape(6.dp),
+                        border = BorderStroke(1.dp, BlueLight.copy(alpha = 0.4f))
                     ) {
                         Text(
                             text = "In progress",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onPrimary,
+                            color = BlueLight,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
@@ -723,17 +765,18 @@ fun SessionTableRow(
                     Text(
                         text = session.endTimeFormatted,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = TextSecondary
                     )
                 }
             }
 
-            // Duration
+            // Duration in exact 00m 00s monospace font
             Text(
                 text = session.durationFormatted,
                 style = MaterialTheme.typography.bodyMedium,
-                fontWeight = if (session.isActive) FontWeight.Bold else FontWeight.Normal,
-                color = if (session.isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = if (session.isActive) FontWeight.Bold else FontWeight.Medium,
+                color = if (session.isActive) BlueLight else TextPrimary,
                 textAlign = TextAlign.End,
                 modifier = Modifier.weight(0.24f)
             )
@@ -743,40 +786,39 @@ fun SessionTableRow(
 
 @Composable
 fun EmptySessionsView(modifier: Modifier = Modifier) {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-        ),
-        shape = RoundedCornerShape(12.dp),
+    Surface(
+        color = DarkSurface,
+        shape = RoundedCornerShape(14.dp),
+        border = BorderStroke(1.dp, DarkBorder),
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 16.dp)
+            .padding(vertical = 12.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(32.dp),
+                .padding(36.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Icon(
                 imageVector = Icons.Default.Smartphone,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                modifier = Modifier.size(48.dp)
+                tint = TextMuted.copy(alpha = 0.4f),
+                modifier = Modifier.size(44.dp)
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = "No sessions recorded",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = TextPrimary
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Sessions for this day will automatically appear when the screen turns on and off.",
+                text = "Sessions for this day will appear automatically as the screen turns on and off.",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = TextMuted,
                 textAlign = TextAlign.Center
             )
         }
@@ -788,11 +830,10 @@ fun NotificationPermissionBanner(
     onRequestPermission: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer
-        ),
-        shape = RoundedCornerShape(12.dp),
+    Surface(
+        color = DarkSurface,
+        shape = RoundedCornerShape(14.dp),
+        border = BorderStroke(1.dp, BlueLight.copy(alpha = 0.3f)),
         modifier = modifier.fillMaxWidth()
     ) {
         Row(
@@ -804,8 +845,8 @@ fun NotificationPermissionBanner(
             Icon(
                 imageVector = Icons.Default.Notifications,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.size(28.dp)
+                tint = BlueLight,
+                modifier = Modifier.size(24.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -813,17 +854,24 @@ fun NotificationPermissionBanner(
                     text = "Notification Permission Needed",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                    color = TextPrimary
                 )
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "Android requires permission to show the persistent tracking notification so the service stays alive.",
+                    text = "Required for background monitoring service to remain active.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                    color = TextSecondary
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 FilledTonalButton(
                     onClick = onRequestPermission,
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = BlueContainer,
+                        contentColor = BlueLight
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
+                    modifier = Modifier.height(28.dp)
                 ) {
                     Text(text = "Grant Permission", style = MaterialTheme.typography.labelSmall)
                 }
@@ -838,11 +886,10 @@ fun InterruptionBanner(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer
-        ),
-        shape = RoundedCornerShape(12.dp),
+    Surface(
+        color = RedErrorContainer,
+        shape = RoundedCornerShape(14.dp),
+        border = BorderStroke(1.dp, RedError.copy(alpha = 0.3f)),
         modifier = modifier.fillMaxWidth()
     ) {
         Row(
@@ -854,8 +901,8 @@ fun InterruptionBanner(
             Icon(
                 imageVector = Icons.Default.Warning,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onErrorContainer,
-                modifier = Modifier.size(28.dp)
+                tint = OnRedErrorContainer,
+                modifier = Modifier.size(24.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -863,23 +910,21 @@ fun InterruptionBanner(
                     text = "Monitoring Interrupted",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onErrorContainer
+                    color = OnRedErrorContainer
                 )
                 Text(
                     text = message,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onErrorContainer
+                    color = OnRedErrorContainer.copy(alpha = 0.8f)
                 )
             }
             TextButton(onClick = onDismiss) {
                 Text(
                     text = "Dismiss",
-                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    color = OnRedErrorContainer,
                     fontWeight = FontWeight.Bold
                 )
             }
         }
     }
 }
-
-
