@@ -179,6 +179,13 @@ class SessionManager(private val context: Context) {
 
             val activeSession = sessionDao.getActiveSession()
             if (activeSession != null) {
+                val elapsedSinceStart = now - activeSession.startTimestamp
+                if (!isReboot && elapsedSinceStart < 5000L) {
+                    // Session was just started (e.g. during recent tracking initialization); let it continue
+                    Log.d(TAG, "Reconcile: session #${activeSession.id} was recently started ($elapsedSinceStart ms ago), keeping active")
+                    return
+                }
+
                 // There was an open session before termination / reboot.
                 // Mark previous session as INTERRUPTED so we don't fabricate unverified screen time.
                 val cappedEnd = now

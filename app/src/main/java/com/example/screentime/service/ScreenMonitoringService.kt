@@ -55,9 +55,11 @@ class ScreenMonitoringService : Service() {
         // Register runtime screen state receiver if not registered
         registerScreenReceiver()
 
-        // Reconcile session state upon starting/recovering
-        serviceScope.launch {
-            SessionManager.getInstance(applicationContext).reconcileState(isReboot = isReboot)
+        val isRecovery = (intent == null) || isReboot
+        if (isRecovery) {
+            serviceScope.launch {
+                SessionManager.getInstance(applicationContext).reconcileState(isReboot = isReboot)
+            }
         }
 
         return START_STICKY
