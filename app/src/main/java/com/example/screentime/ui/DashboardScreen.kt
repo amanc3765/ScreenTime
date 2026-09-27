@@ -656,7 +656,7 @@ fun SessionTableHeader(modifier: Modifier = Modifier) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 10.dp),
+                .padding(horizontal = 14.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -713,7 +713,7 @@ fun SessionTableRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 12.dp),
+                .padding(horizontal = 14.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Sequence Number
@@ -738,7 +738,7 @@ fun SessionTableRow(
                 if (session.isActive) {
                     Surface(
                         color = BlueLight.copy(alpha = 0.15f),
-                        shape = RoundedCornerShape(6.dp),
+                        shape = RoundedCornerShape(4.dp),
                         border = BorderStroke(1.dp, BlueLight.copy(alpha = 0.4f))
                     ) {
                         Text(
@@ -746,7 +746,7 @@ fun SessionTableRow(
                             style = MaterialTheme.typography.labelSmall,
                             color = BlueLight,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
                         )
                     }
                 } else {
