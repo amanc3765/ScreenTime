@@ -683,7 +683,7 @@ fun SessionTableHeader(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 6.dp),
+                .padding(horizontal = 14.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Index column (#)
@@ -817,7 +817,7 @@ fun SessionTableRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 6.dp),
+                .padding(horizontal = 14.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Sequence Number
@@ -842,15 +842,15 @@ fun SessionTableRow(
                 if (session.isActive) {
                     Surface(
                         color = BlueLight.copy(alpha = 0.15f),
-                        shape = RoundedCornerShape(4.dp),
+                        shape = RoundedCornerShape(6.dp),
                         border = BorderStroke(1.dp, BlueLight.copy(alpha = 0.4f))
                     ) {
                         Text(
                             text = "In progress",
                             style = MaterialTheme.typography.labelSmall,
                             color = BlueLight,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }
                 } else {
@@ -870,7 +870,7 @@ fun SessionTableRow(
             ) {
                 Surface(
                     color = durationContainer,
-                    shape = RoundedCornerShape(4.dp),
+                    shape = RoundedCornerShape(6.dp),
                     border = BorderStroke(0.5.dp, durationColor.copy(alpha = 0.4f))
                 ) {
                     Text(
@@ -879,7 +879,7 @@ fun SessionTableRow(
                         fontWeight = FontWeight.SemiBold,
                         color = durationColor,
                         textAlign = TextAlign.End,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                     )
                 }
             }
