@@ -70,7 +70,7 @@ fun SessionTableHeader(
             // Index column (#)
             Text(
                 text = "#",
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
                 color = TextMuted,
                 modifier = Modifier.weight(0.10f)
@@ -135,12 +135,12 @@ fun SortableHeaderCell(
     ) {
         Text(
             text = title,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
             color = contentColor,
             letterSpacing = 0.5.sp
         )
-        Spacer(modifier = Modifier.width(2.dp))
+        Spacer(modifier = Modifier.width(3.dp))
         if (isSelected) {
             Icon(
                 imageVector = if (sortOrder == SortOrder.ASCENDING) {
@@ -150,7 +150,7 @@ fun SortableHeaderCell(
                 },
                 contentDescription = if (sortOrder == SortOrder.ASCENDING) "Ascending" else "Descending",
                 tint = BlueLight,
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier.size(18.dp)
             )
         } else {
             // Subtle placeholder indicator icon
@@ -158,7 +158,7 @@ fun SortableHeaderCell(
                 imageVector = Icons.Default.ArrowDropDown,
                 contentDescription = null,
                 tint = TextMuted.copy(alpha = 0.35f),
-                modifier = Modifier.size(14.dp)
+                modifier = Modifier.size(16.dp)
             )
         }
     }
