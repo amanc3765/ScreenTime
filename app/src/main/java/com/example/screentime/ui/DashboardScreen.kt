@@ -82,12 +82,18 @@ import com.example.screentime.ui.theme.DarkBorder
 import com.example.screentime.ui.theme.DarkSurface
 import com.example.screentime.ui.theme.DarkSurfaceVariant
 import com.example.screentime.ui.theme.GreenActive
+import com.example.screentime.ui.theme.GreenUsage
+import com.example.screentime.ui.theme.GreenUsageContainer
 import com.example.screentime.ui.theme.OnRedErrorContainer
 import com.example.screentime.ui.theme.RedError
 import com.example.screentime.ui.theme.RedErrorContainer
+import com.example.screentime.ui.theme.RedUsage
+import com.example.screentime.ui.theme.RedUsageContainer
 import com.example.screentime.ui.theme.TextMuted
 import com.example.screentime.ui.theme.TextPrimary
 import com.example.screentime.ui.theme.TextSecondary
+import com.example.screentime.ui.theme.YellowUsage
+import com.example.screentime.ui.theme.YellowUsageContainer
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -788,6 +794,22 @@ fun SessionTableRow(
         Color.Transparent
     }
 
+    // Color code sessions based on duration:
+    // < 5 minutes (< 300,000 ms)  -> Low usage: Green
+    // 5 to 15 minutes (300,000 - 900,000 ms) -> Medium usage: Yellow
+    // > 15 minutes (> 900,000 ms) -> High usage: Red
+    val durationColor = when {
+        session.rawDurationMillis < 5 * 60 * 1000L -> GreenUsage
+        session.rawDurationMillis <= 15 * 60 * 1000L -> YellowUsage
+        else -> RedUsage
+    }
+
+    val durationContainer = when {
+        session.rawDurationMillis < 5 * 60 * 1000L -> GreenUsageContainer
+        session.rawDurationMillis <= 15 * 60 * 1000L -> YellowUsageContainer
+        else -> RedUsageContainer
+    }
+
     Surface(
         color = rowBackground,
         modifier = modifier.fillMaxWidth()
@@ -840,15 +862,27 @@ fun SessionTableRow(
                 }
             }
 
-            // Duration in exact 00m 00s
-            Text(
-                text = session.durationFormatted,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = if (session.isActive) FontWeight.SemiBold else FontWeight.Medium,
-                color = if (session.isActive) BlueLight else TextPrimary,
-                textAlign = TextAlign.End,
-                modifier = Modifier.weight(0.26f)
-            )
+            // Duration color-coded: <5m Green, 5m-15m Yellow, >15m Red
+            Row(
+                modifier = Modifier.weight(0.26f),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    color = durationContainer,
+                    shape = RoundedCornerShape(4.dp),
+                    border = BorderStroke(0.5.dp, durationColor.copy(alpha = 0.4f))
+                ) {
+                    Text(
+                        text = session.durationFormatted,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = durationColor,
+                        textAlign = TextAlign.End,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
         }
     }
 }
