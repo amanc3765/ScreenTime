@@ -64,7 +64,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -146,9 +145,7 @@ fun DashboardScreen(
                     Text(
                         text = "Screen Time",
                         style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = TextPrimary,
-                        letterSpacing = (-0.5).sp
+                        color = TextPrimary
                     )
                 }
             }
@@ -595,7 +592,7 @@ fun DailySummaryCards(
                 Text(
                     text = String.format(Locale.US, "%02d", totalSessions),
                     style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
@@ -630,8 +627,7 @@ fun DailySummaryCards(
                 Text(
                     text = totalScreenTime,
                     style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
                     color = BlueLight
                 )
                 Spacer(modifier = Modifier.height(4.dp))
@@ -758,12 +754,11 @@ fun SessionTableRow(
                 }
             }
 
-            // Duration in exact 00m 00s monospace font
+            // Duration in exact 00m 00s
             Text(
                 text = session.durationFormatted,
                 style = MaterialTheme.typography.bodyMedium,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = if (session.isActive) FontWeight.Bold else FontWeight.Medium,
+                fontWeight = if (session.isActive) FontWeight.SemiBold else FontWeight.Medium,
                 color = if (session.isActive) BlueLight else TextPrimary,
                 textAlign = TextAlign.End,
                 modifier = Modifier.weight(0.24f)
