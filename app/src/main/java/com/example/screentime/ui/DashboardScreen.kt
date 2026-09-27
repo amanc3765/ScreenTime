@@ -683,7 +683,7 @@ fun SessionTableHeader(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 8.dp),
+                .padding(horizontal = 14.dp, vertical = 11.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Index column (#)
@@ -746,9 +746,9 @@ fun SortableHeaderCell(
 
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(4.dp))
+            .clip(RoundedCornerShape(6.dp))
             .clickable(onClick = onClick)
-            .padding(vertical = 2.dp),
+            .padding(horizontal = 4.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = if (alignment == Alignment.End) Arrangement.End else Arrangement.Start
     ) {
