@@ -128,15 +128,20 @@ class SessionRepository(private val sessionDao: SessionDao) {
         )
     }
 
+    fun clearSessionsForDate(date: LocalDate) {
+        val dateStr = date.format(dateFormatter)
+        sessionDao.deleteSessionsForStartDate(dateStr)
+    }
+
     companion object {
         fun formatDuration(durationMillis: Long): String {
-            if (durationMillis <= 0L) return "0m 0s"
+            if (durationMillis <= 0L) return "00m 00s"
 
             val totalSeconds = durationMillis / 1000
             val minutes = totalSeconds / 60
             val seconds = totalSeconds % 60
 
-            return "${minutes}m ${seconds}s"
+            return String.format(Locale.US, "%02dm %02ds", minutes, seconds)
         }
     }
 }

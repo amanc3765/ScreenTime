@@ -36,9 +36,11 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.Today
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -106,6 +108,8 @@ fun DashboardScreen(
     ) { isGranted ->
         hasNotificationPermission = isGranted
     }
+
+    var showResetConfirmDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -197,7 +201,7 @@ fun DashboardScreen(
             item {
                 DailySummaryCards(
                     totalSessions = state.daySummary?.totalSessionsCount ?: 0,
-                    totalScreenTime = state.daySummary?.formattedTotalDuration ?: "0m"
+                    totalScreenTime = state.daySummary?.formattedTotalDuration ?: "00m 00s"
                 )
             }
 
@@ -215,11 +219,35 @@ fun DashboardScreen(
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
-                    Text(
-                        text = "${state.daySummary?.sessions?.size ?: 0} sessions",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "${state.daySummary?.sessions?.size ?: 0} sessions",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        FilledTonalButton(
+                            onClick = { showResetConfirmDialog = true },
+                            colors = ButtonDefaults.filledTonalButtonColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer,
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer
+                            ),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                            modifier = Modifier.height(28.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.RestartAlt,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Reset Day",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
                 }
             }
 
@@ -251,6 +279,45 @@ fun DashboardScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
+    }
+
+    if (showResetConfirmDialog) {
+        val dateLabel = if (state.isToday) "today" else "the selected day (${state.selectedDate})"
+        AlertDialog(
+            onDismissRequest = { showResetConfirmDialog = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.RestartAlt,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(28.dp)
+                )
+            },
+            title = {
+                Text(text = "Reset Day Sessions?")
+            },
+            text = {
+                Text(text = "This will clear all recorded screen time sessions for $dateLabel. This action cannot be undone.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.resetSelectedDay()
+                        showResetConfirmDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text(text = "Reset", color = MaterialTheme.colorScheme.onError)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetConfirmDialog = false }) {
+                    Text(text = "Cancel")
+                }
+            }
+        )
     }
 }
 

@@ -9,6 +9,7 @@ import com.example.screentime.data.preferences.ScreenTimePreferences
 import com.example.screentime.manager.SessionManager
 import com.example.screentime.repository.DaySummaryData
 import com.example.screentime.repository.SessionRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -110,7 +111,7 @@ class ScreenTimeViewModel(
     }
 
     fun toggleTracking() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             if (preferences.getTrackingEnabledSync()) {
                 sessionManager.pauseTracking()
             } else {
@@ -121,6 +122,13 @@ class ScreenTimeViewModel(
 
     fun dismissInterruption() {
         preferences.clearInterruption()
+    }
+
+    fun resetSelectedDay() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val date = selectedDateFlow.value
+            sessionManager.resetDay(date)
+        }
     }
 
     companion object {

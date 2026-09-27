@@ -50,4 +50,14 @@ interface SessionDao {
 
     @Query("SELECT * FROM sessions WHERE status = 'ACTIVE'")
     fun getAllActiveSessions(): List<Session>
+
+    @Query("DELETE FROM sessions WHERE startDate = :date")
+    fun deleteSessionsForStartDate(date: String): Int
+
+    @Query("""
+        DELETE FROM sessions 
+        WHERE startTimestamp < :rangeEnd 
+          AND (endTimestamp IS NULL OR endTimestamp > :rangeStart)
+    """)
+    fun deleteSessionsIntersectingRange(rangeStart: Long, rangeEnd: Long): Int
 }

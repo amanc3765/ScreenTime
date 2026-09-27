@@ -25,6 +25,8 @@ class SessionRepositoryTest {
         override fun getSessionsIntersectingRangeSync(rangeStart: Long, rangeEnd: Long): List<Session> = emptyList()
         override fun getAllSessionsFlow(): Flow<List<Session>> = emptyFlow()
         override fun getAllActiveSessions(): List<Session> = emptyList()
+        override fun deleteSessionsForStartDate(date: String): Int = 0
+        override fun deleteSessionsIntersectingRange(rangeStart: Long, rangeEnd: Long): Int = 0
     }
 
     private val repository = SessionRepository(fakeDao)
@@ -32,12 +34,12 @@ class SessionRepositoryTest {
 
     @Test
     fun testFormatDuration() {
-        assertEquals("0m 0s", SessionRepository.formatDuration(0L))
-        assertEquals("0m 30s", SessionRepository.formatDuration(30_000L))
-        assertEquals("25m 0s", SessionRepository.formatDuration(25 * 60 * 1000L))
-        assertEquals("155m 0s", SessionRepository.formatDuration((2 * 3600 + 35 * 60) * 1000L))
-        assertEquals("60m 0s", SessionRepository.formatDuration(3600 * 1000L))
-        assertEquals("2m 15s", SessionRepository.formatDuration((2 * 60 + 15) * 1000L))
+        assertEquals("00m 00s", SessionRepository.formatDuration(0L))
+        assertEquals("00m 30s", SessionRepository.formatDuration(30_000L))
+        assertEquals("25m 00s", SessionRepository.formatDuration(25 * 60 * 1000L))
+        assertEquals("155m 00s", SessionRepository.formatDuration((2 * 3600 + 35 * 60) * 1000L))
+        assertEquals("60m 00s", SessionRepository.formatDuration(3600 * 1000L))
+        assertEquals("02m 15s", SessionRepository.formatDuration((2 * 60 + 15) * 1000L))
     }
 
     @Test
@@ -80,7 +82,7 @@ class SessionRepositoryTest {
 
         // Day 1 should have exactly 5 minutes allocated
         assertEquals(5 * 60 * 1000L, day1Summary.totalDurationMillis)
-        assertEquals("5m 0s", day1Summary.formattedTotalDuration)
+        assertEquals("05m 00s", day1Summary.formattedTotalDuration)
         // Counted once on its start date
         assertEquals(1, day1Summary.totalSessionsCount)
         assertEquals(1, day1Summary.sessions.size)
@@ -99,7 +101,7 @@ class SessionRepositoryTest {
 
         // Day 2 should have exactly 10 minutes allocated
         assertEquals(10 * 60 * 1000L, day2Summary.totalDurationMillis)
-        assertEquals("10m 0s", day2Summary.formattedTotalDuration)
+        assertEquals("10m 00s", day2Summary.formattedTotalDuration)
         // Should not be counted in Day 2 session count
         assertEquals(0, day2Summary.totalSessionsCount)
         assertEquals(0, day2Summary.sessions.size)
@@ -136,7 +138,7 @@ class SessionRepositoryTest {
 
         assertEquals(1, summary.totalSessionsCount)
         assertEquals(12 * 60 * 1000L, summary.totalDurationMillis)
-        assertEquals("12m 0s", summary.formattedTotalDuration)
+        assertEquals("12m 00s", summary.formattedTotalDuration)
         assertEquals(1, summary.sessions.size)
         assertTrue(summary.sessions[0].isActive)
         assertEquals("In progress", summary.sessions[0].endTimeFormatted)

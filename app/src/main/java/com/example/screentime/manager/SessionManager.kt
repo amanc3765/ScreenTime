@@ -12,9 +12,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -39,17 +39,17 @@ class SessionManager(private val context: Context) {
             .format(dateFormatter)
     }
 
-    suspend fun onScreenOn(timestamp: Long = System.currentTimeMillis()) {
+    suspend fun onScreenOn(timestamp: Long = System.currentTimeMillis()): Unit = withContext(Dispatchers.IO) {
         mutex.withLock {
             if (!preferences.getTrackingEnabledSync()) {
                 Log.d(TAG, "Screen on ignored: tracking disabled")
-                return
+                return@withLock
             }
 
             val existingActive = sessionDao.getActiveSession()
             if (existingActive != null) {
                 Log.d(TAG, "Screen on ignored: session #${existingActive.id} already active")
-                return
+                return@withLock
             }
 
             val dateStr = getLocalDateString(timestamp)
@@ -67,12 +67,12 @@ class SessionManager(private val context: Context) {
         }
     }
 
-    suspend fun onScreenOff(timestamp: Long = System.currentTimeMillis()) {
+    suspend fun onScreenOff(timestamp: Long = System.currentTimeMillis()): Unit = withContext(Dispatchers.IO) {
         mutex.withLock {
             val activeSession = sessionDao.getActiveSession()
             if (activeSession == null) {
                 Log.d(TAG, "Screen off ignored: no active session")
-                return
+                return@withLock
             }
 
             // Ensure timestamp is at least startTimestamp
@@ -92,7 +92,7 @@ class SessionManager(private val context: Context) {
         }
     }
 
-    suspend fun startTracking() {
+    suspend fun startTracking(): Unit = withContext(Dispatchers.IO) {
         mutex.withLock {
             preferences.setTrackingEnabled(true)
             preferences.clearInterruption()
@@ -122,7 +122,7 @@ class SessionManager(private val context: Context) {
         }
     }
 
-    suspend fun pauseTracking() {
+    suspend fun pauseTracking(): Unit = withContext(Dispatchers.IO) {
         mutex.withLock {
             preferences.setTrackingEnabled(false)
 
@@ -146,14 +146,43 @@ class SessionManager(private val context: Context) {
         }
     }
 
-    suspend fun stopTracking() {
-        pauseTracking()
+    suspend fun stopTracking(): Unit = pauseTracking()
+
+    suspend fun resetDay(date: LocalDate): Unit = withContext(Dispatchers.IO) {
+        mutex.withLock {
+            val dateStr = date.format(dateFormatter)
+            val startOfDay = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val endOfDay = date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            sessionDao.deleteSessionsForStartDate(dateStr)
+            sessionDao.deleteSessionsIntersectingRange(startOfDay, endOfDay)
+            Log.d(TAG, "Cleared all sessions for date: $dateStr")
+
+            // If today was reset and screen is currently interactive & tracking enabled, start a fresh session from now
+            val isToday = date.isEqual(LocalDate.now())
+            if (isToday && preferences.getTrackingEnabledSync()) {
+                val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+                val isInteractive = powerManager?.isInteractive ?: true
+                if (isInteractive) {
+                    val now = System.currentTimeMillis()
+                    val newSession = Session(
+                        startTimestamp = now,
+                        endTimestamp = null,
+                        durationMillis = 0L,
+                        startDate = dateStr,
+                        endDate = null,
+                        status = SessionStatus.ACTIVE
+                    )
+                    sessionDao.insert(newSession)
+                    Log.d(TAG, "Started fresh active session after resetting today at $now")
+                }
+            }
+        }
     }
 
     /**
      * Reconciles database state when service restarts after termination or reboot.
      */
-    suspend fun reconcileState(isReboot: Boolean = false) {
+    suspend fun reconcileState(isReboot: Boolean = false): Unit = withContext(Dispatchers.IO) {
         mutex.withLock {
             val trackingEnabled = preferences.getTrackingEnabledSync()
             if (!trackingEnabled) {
@@ -170,7 +199,7 @@ class SessionManager(private val context: Context) {
                         )
                     )
                 }
-                return
+                return@withLock
             }
 
             val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
@@ -183,7 +212,7 @@ class SessionManager(private val context: Context) {
                 if (!isReboot && elapsedSinceStart < 5000L) {
                     // Session was just started (e.g. during recent tracking initialization); let it continue
                     Log.d(TAG, "Reconcile: session #${activeSession.id} was recently started ($elapsedSinceStart ms ago), keeping active")
-                    return
+                    return@withLock
                 }
 
                 // There was an open session before termination / reboot.
