@@ -13,6 +13,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -228,11 +231,15 @@ fun DashboardScreen(
 
             // Session History Table Header
             item {
-                SessionTableHeader()
+                SessionTableHeader(
+                    sortColumn = state.sortColumn,
+                    sortOrder = state.sortOrder,
+                    onSortColumnClick = { viewModel.onSortColumnClick(it) }
+                )
             }
 
             // Session History Table Rows or Empty State
-            val sessions = state.daySummary?.sessions.orEmpty()
+            val sessions = state.sortedSessions
             if (sessions.isEmpty()) {
                 item {
                     EmptySessionsView()
@@ -655,7 +662,12 @@ fun DailySummaryCards(
 }
 
 @Composable
-fun SessionTableHeader(modifier: Modifier = Modifier) {
+fun SessionTableHeader(
+    sortColumn: SessionSortColumn,
+    sortOrder: SortOrder,
+    onSortColumnClick: (SessionSortColumn) -> Unit,
+    modifier: Modifier = Modifier
+) {
     Surface(
         color = DarkSurfaceVariant.copy(alpha = 0.6f),
         shape = RoundedCornerShape(10.dp),
@@ -668,37 +680,98 @@ fun SessionTableHeader(modifier: Modifier = Modifier) {
                 .padding(horizontal = 14.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Index column (#)
             Text(
                 text = "#",
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Bold,
                 color = TextMuted,
-                modifier = Modifier.weight(0.12f)
+                modifier = Modifier.weight(0.10f)
             )
-            Text(
-                text = "START",
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                color = TextMuted,
-                letterSpacing = 0.5.sp,
-                modifier = Modifier.weight(0.32f)
+
+            // START TIME Column
+            SortableHeaderCell(
+                title = "START",
+                column = SessionSortColumn.START_TIME,
+                currentSortColumn = sortColumn,
+                sortOrder = sortOrder,
+                onClick = { onSortColumnClick(SessionSortColumn.START_TIME) },
+                modifier = Modifier.weight(0.32f),
+                alignment = Alignment.Start
             )
-            Text(
-                text = "END",
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                color = TextMuted,
-                letterSpacing = 0.5.sp,
-                modifier = Modifier.weight(0.32f)
+
+            // END TIME Column
+            SortableHeaderCell(
+                title = "END",
+                column = SessionSortColumn.END_TIME,
+                currentSortColumn = sortColumn,
+                sortOrder = sortOrder,
+                onClick = { onSortColumnClick(SessionSortColumn.END_TIME) },
+                modifier = Modifier.weight(0.32f),
+                alignment = Alignment.Start
             )
-            Text(
-                text = "DURATION",
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                color = TextMuted,
-                letterSpacing = 0.5.sp,
-                textAlign = TextAlign.End,
-                modifier = Modifier.weight(0.24f)
+
+            // DURATION Column
+            SortableHeaderCell(
+                title = "DURATION",
+                column = SessionSortColumn.DURATION,
+                currentSortColumn = sortColumn,
+                sortOrder = sortOrder,
+                onClick = { onSortColumnClick(SessionSortColumn.DURATION) },
+                modifier = Modifier.weight(0.26f),
+                alignment = Alignment.End
+            )
+        }
+    }
+}
+
+@Composable
+fun SortableHeaderCell(
+    title: String,
+    column: SessionSortColumn,
+    currentSortColumn: SessionSortColumn,
+    sortOrder: SortOrder,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    alignment: Alignment.Horizontal = Alignment.Start
+) {
+    val isSelected = column == currentSortColumn
+    val contentColor = if (isSelected) BlueLight else TextMuted
+
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(4.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = if (alignment == Alignment.End) Arrangement.End else Arrangement.Start
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+            color = contentColor,
+            letterSpacing = 0.5.sp
+        )
+        Spacer(modifier = Modifier.width(2.dp))
+        if (isSelected) {
+            Icon(
+                imageVector = if (sortOrder == SortOrder.ASCENDING) {
+                    Icons.Default.ArrowDropUp
+                } else {
+                    Icons.Default.ArrowDropDown
+                },
+                contentDescription = if (sortOrder == SortOrder.ASCENDING) "Ascending" else "Descending",
+                tint = BlueLight,
+                modifier = Modifier.size(16.dp)
+            )
+        } else {
+            // Subtle placeholder indicator icon
+            Icon(
+                imageVector = Icons.Default.ArrowDropDown,
+                contentDescription = null,
+                tint = TextMuted.copy(alpha = 0.35f),
+                modifier = Modifier.size(14.dp)
             )
         }
     }
@@ -731,7 +804,7 @@ fun SessionTableRow(
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
                 color = if (session.isActive) BlueLight else TextMuted,
-                modifier = Modifier.weight(0.12f)
+                modifier = Modifier.weight(0.10f)
             )
 
             // Start Time
@@ -774,7 +847,7 @@ fun SessionTableRow(
                 fontWeight = if (session.isActive) FontWeight.SemiBold else FontWeight.Medium,
                 color = if (session.isActive) BlueLight else TextPrimary,
                 textAlign = TextAlign.End,
-                modifier = Modifier.weight(0.24f)
+                modifier = Modifier.weight(0.26f)
             )
         }
     }

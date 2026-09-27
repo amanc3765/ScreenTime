@@ -14,6 +14,8 @@ import java.util.Locale
 data class SessionUiItem(
     val id: Long,
     val sequenceNumber: Int,
+    val startTimestamp: Long = 0L,
+    val endTimestamp: Long? = null,
     val startTimeFormatted: String,
     val endTimeFormatted: String,
     val durationFormatted: String,
@@ -107,9 +109,13 @@ class SessionRepository(private val sessionDao: SessionDao) {
                 session.durationMillis
             }
 
+            val endTs = if (isActive) currentTimeMillis else session.endTimestamp
+
             SessionUiItem(
                 id = session.id,
                 sequenceNumber = index + 1,
+                startTimestamp = session.startTimestamp,
+                endTimestamp = endTs,
                 startTimeFormatted = startTimeFormatted,
                 endTimeFormatted = endTimeFormatted,
                 durationFormatted = formatDuration(sessionDuration),
