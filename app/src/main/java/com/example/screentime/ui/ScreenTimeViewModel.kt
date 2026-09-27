@@ -12,6 +12,7 @@ import com.example.screentime.repository.SessionRepository
 import com.example.screentime.repository.SessionUiItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -22,31 +23,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
-enum class SessionSortColumn {
-    START_TIME,
-    END_TIME,
-    DURATION
-}
-
-enum class SortOrder {
-    ASCENDING,
-    DESCENDING
-}
-
-data class ScreenTimeUiState(
-    val selectedDate: LocalDate = LocalDate.now(),
-    val isNextDayEnabled: Boolean = false,
-    val isToday: Boolean = true,
-    val daySummary: DaySummaryData? = null,
-    val sortedSessions: List<SessionUiItem> = emptyList(),
-    val sortColumn: SessionSortColumn = SessionSortColumn.START_TIME,
-    val sortOrder: SortOrder = SortOrder.ASCENDING,
-    val isTrackingEnabled: Boolean = false,
-    val activeSession: Session? = null,
-    val isInterrupted: Boolean = false,
-    val interruptionMessage: String? = null
-)
-
+@OptIn(ExperimentalCoroutinesApi::class)
 class ScreenTimeViewModel(
     private val repository: SessionRepository,
     private val sessionManager: SessionManager,
