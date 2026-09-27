@@ -112,7 +112,7 @@ class SessionRepository(private val sessionDao: SessionDao) {
                 sequenceNumber = index + 1,
                 startTimeFormatted = startTimeFormatted,
                 endTimeFormatted = endTimeFormatted,
-                durationFormatted = formatDuration(sessionDuration, showSecondsForShort = isActive),
+                durationFormatted = formatDuration(sessionDuration),
                 rawDurationMillis = sessionDuration,
                 isActive = isActive,
                 isInterrupted = isInterrupted
@@ -123,35 +123,20 @@ class SessionRepository(private val sessionDao: SessionDao) {
             date = date,
             totalSessionsCount = totalSessionsCount,
             totalDurationMillis = totalDayDurationMillis,
-            formattedTotalDuration = formatDuration(totalDayDurationMillis, showSecondsForShort = false),
+            formattedTotalDuration = formatDuration(totalDayDurationMillis),
             sessions = uiItems
         )
     }
 
     companion object {
-        fun formatDuration(durationMillis: Long, showSecondsForShort: Boolean = false): String {
-            if (durationMillis <= 0L) return "0m"
+        fun formatDuration(durationMillis: Long): String {
+            if (durationMillis <= 0L) return "0m 0s"
 
             val totalSeconds = durationMillis / 1000
-            val hours = totalSeconds / 3600
-            val minutes = (totalSeconds % 3600) / 60
+            val minutes = totalSeconds / 60
             val seconds = totalSeconds % 60
 
-            return when {
-                hours > 0 -> {
-                    if (minutes > 0) "${hours}h ${minutes}m" else "${hours}h"
-                }
-                minutes > 0 -> {
-                    if (showSecondsForShort && seconds > 0) "${minutes}m ${seconds}s" else "${minutes}m"
-                }
-                showSecondsForShort -> {
-                    "${seconds}s"
-                }
-                else -> {
-                    // Under 1 minute formatted as "0m" unless showSecondsForShort
-                    if (totalSeconds > 0) "<1m" else "0m"
-                }
-            }
+            return "${minutes}m ${seconds}s"
         }
     }
 }

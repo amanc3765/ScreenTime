@@ -33,7 +33,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -248,10 +247,7 @@ fun DashboardScreen(
                 }
             }
 
-            // Explanatory Note Footer
             item {
-                Spacer(modifier = Modifier.height(8.dp))
-                PrivacyInfoCard()
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
@@ -831,44 +827,4 @@ fun InterruptionBanner(
     }
 }
 
-@Composable
-fun PrivacyInfoCard(modifier: Modifier = Modifier) {
-    OutlinedCard(
-        colors = CardDefaults.outlinedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        shape = RoundedCornerShape(12.dp),
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-            Icon(
-                imageVector = Icons.Default.Info,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .size(20.dp)
-                    .padding(top = 2.dp)
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            Column {
-                Text(
-                    text = "Privacy & Accuracy Guarantee",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "This app strictly monitors device screen on/off transitions. It never tracks individual apps, keystrokes, personal content, or internet activity. All records remain on your device.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
+
